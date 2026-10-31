@@ -327,8 +327,6 @@ aristas_texto = st.text_area(
     ),
     height=180,
 )
-
-
 # =========================================================
 # 5. CREACIÓN Y VALIDACIÓN DEL GRAFO
 # =========================================================
@@ -837,9 +835,7 @@ else:
                         )
 
                         aristas_recorrido = aristas_recorrido[:paso]
-
-
-    # -----------------------------------------------------
+                            # -----------------------------------------------------
     # HAMILTON
     # -----------------------------------------------------
 
@@ -878,13 +874,13 @@ else:
                 buscar_ciclo=True,
             )
 
-
+            # Mostrar el camino hamiltoniano
             if camino_h is not None:
 
                 st.success("Se encontró un camino hamiltoniano.")
 
                 st.markdown(
-                    '<div class="panel"><b>Camino</b><br>'
+                    '<div class="panel"><b>Camino hamiltoniano</b><br>'
                     '<span style="color:#00e5c7">'
                     + " → ".join(camino_h)
                     + "</span></div>",
@@ -897,53 +893,75 @@ else:
                     "No se encontró un camino hamiltoniano."
                 )
 
-
+            # Mostrar el ciclo hamiltoniano
             if ciclo_h is not None:
 
                 st.success("Se encontró un ciclo hamiltoniano.")
 
                 st.markdown(
-                    '<div class="panel"><b>Ciclo</b><br>'
+                    '<div class="panel"><b>Ciclo hamiltoniano</b><br>'
                     '<span style="color:#00e5c7">'
                     + " → ".join(ciclo_h)
                     + "</span></div>",
                     unsafe_allow_html=True,
                 )
 
-                vertices_recorrido = ciclo_h
+            else:
 
-                aristas_recorrido = list(
-                    zip(ciclo_h, ciclo_h[1:])
+                st.warning(
+                    "No se encontró un ciclo hamiltoniano."
                 )
+
+            # Seleccionar automáticamente el recorrido
+            # que se mostrará en la animación.
+            # Se da prioridad al ciclo si existe.
+
+            if ciclo_h is not None:
+
+                vertices_recorrido = ciclo_h
 
             elif camino_h is not None:
 
                 vertices_recorrido = camino_h
 
-                aristas_recorrido = list(
-                    zip(camino_h, camino_h[1:])
+            else:
+
+                vertices_recorrido = []
+
+            # Preparar las aristas del recorrido
+            aristas_recorrido = list(
+                zip(
+                    vertices_recorrido,
+                    vertices_recorrido[1:]
                 )
+            )
 
-
-            if animar and vertices_recorrido:
+            # Animación paso a paso
+            if animar and len(vertices_recorrido) > 1:
 
                 st.markdown("#### Recorrido paso a paso")
 
-                # Control de pasos con botones y barra deslizante.
                 clave_paso = "paso_hamilton"
-                maximo_paso = len(vertices_recorrido)
+                maximo_paso = len(vertices_recorrido) - 1
 
                 if clave_paso not in st.session_state:
+
                     st.session_state[clave_paso] = 1
+
                 else:
+
                     st.session_state[clave_paso] = max(
                         1,
-                        min(maximo_paso, st.session_state[clave_paso]),
+                        min(
+                            maximo_paso,
+                            st.session_state[clave_paso]
+                        )
                     )
 
                 col_menos, col_barra, col_mas = st.columns([1, 6, 1])
 
                 with col_menos:
+
                     st.button(
                         "−",
                         key="retroceder_hamilton",
@@ -954,14 +972,16 @@ else:
                     )
 
                 with col_barra:
+
                     paso = st.slider(
-                        "Vértices del recorrido",
+                        "Avanzar por las aristas",
                         min_value=1,
                         max_value=maximo_paso,
                         key=clave_paso,
                     )
 
                 with col_mas:
+
                     st.button(
                         "+",
                         key="avanzar_hamilton",
@@ -971,31 +991,19 @@ else:
                         args=(clave_paso, 1, maximo_paso),
                     )
 
+                # Mostrar los vértices alcanzados hasta el momento
                 st.info(
-                    " → ".join(vertices_recorrido[:paso])
+                    " → ".join(vertices_recorrido[:paso + 1])
                 )
 
-                # Si se encontró un ciclo, se incluye la arista
-                # de regreso al inicio al completar todos los pasos.
-
+                # Resaltar únicamente las aristas recorridas
                 aristas_recorrido = list(
                     zip(
-                        vertices_recorrido[:paso],
-                        vertices_recorrido[1:paso],
+                        vertices_recorrido[:paso + 1],
+                        vertices_recorrido[1:paso + 1],
                     )
                 )
-
-                if (
-                    ciclo_h is not None
-                    and paso == len(vertices_recorrido)
-                ):
-
-                    aristas_recorrido.append(
-                        (ciclo_h[-2], ciclo_h[-1])
-                    )
-
-
-    # =====================================================
+                    # =====================================================
     # 7. VISUALIZACIÓN DEL GRAFO
     # =====================================================
 
